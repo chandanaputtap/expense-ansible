@@ -1,0 +1,47 @@
+- name: Configure backend mysql
+  become: yes
+  hosts: backend
+  vars: 
+    mysql_root_password: ExpenseApp@1
+    mysql_login_host: db.jyochandu.online
+  
+  tasks:
+  - name: disable default nodejs
+    ansible.builtin.command: dnf module disable nodejs -y
+  
+  - name: enable nodejs:20
+    ansible.builtin.command: dnf module enable nodejs:20 -y
+
+  - name: Install nodejs and mysql packages
+    ansible.builtin.dnf:
+      name: "{{item}}"
+      state: installed
+    loop:
+    - nodejs
+    - mysql
+  
+  - name: create expense user
+    ansible.builtin.user:
+      name: expense
+  
+  - name: Create app directory
+    ansible.builtin.file:
+      path: /app
+      state: directory
+
+  - name: download backend code
+    ansible.builtin.get_url:
+      url: https://expense-builds.s3.us-east-1.amazonaws.com/expense-backend-v2.zip
+      dest: /tmp/backend.zip
+
+
+  - name: unzip backend 
+    ansible.builtin.unarchive:
+      src: /tmp/backend.zip
+      dest: /app
+      remote_src: yes
+
+  - name: Install npm dependencies
+    ansible.builtin.command: npm install
+    args:
+      chdir: /app
