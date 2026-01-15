@@ -45,3 +45,34 @@
     ansible.builtin.command: npm install
     args:
       chdir: /app
+  
+  - name: Copy backend service
+    ansible.builtin.copy:
+      src: backend.service
+      dest: /etc/systemd/system/backend.service
+  
+  - name: Install python Mysql dependencies
+    ansible.builtin.pip:
+      name:
+      - PyMySQL
+      - Cryptography
+      executable: pip3.9
+
+  - name: Import data into mysql
+    community.mysql.mysql_db:
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+      login_host: "{{ mysql_login_host }}"
+      target: /app/schema/backend.sql
+      state: Import
+      name: all
+
+  - name: daemon-reload to pick up configuration changes
+    ansible.builtin.systemd_service:
+      daemon_reload: yes
+
+  - name: Start and enable backend service
+    ansible.builtin.service:
+      name: backend
+      state: started
+      enabled: yes
