@@ -64,7 +64,7 @@
       login_password: "{{ mysql_root_password }}"
       login_host: "{{ mysql_login_host }}"
       target: /app/schema/backend.sql
-      state: Import
+      state: import
       name: all
 
   - name: daemon-reload to pick up configuration changes
